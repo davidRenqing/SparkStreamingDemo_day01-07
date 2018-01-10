@@ -1,0 +1,6 @@
+# Hive-CreateMyFuction
+这是一个hive创建自己的函数的demo
+你在Eclipse中写自己想要创建的函数的逻辑
+将这个项目封装成jar包
+将这个jar包导入到Hive的lib文件夹
+之后写一个Hive函数将jar包的这个函数所在的类的全路径相关联
