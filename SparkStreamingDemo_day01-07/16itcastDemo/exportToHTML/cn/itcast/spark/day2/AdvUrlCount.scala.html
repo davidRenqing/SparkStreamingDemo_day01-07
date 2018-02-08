@@ -1,0 +1,118 @@
+<html>
+<head>
+<title>AdvUrlCount.scala</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #999999; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(0,0,128); font-weight: bold; }
+.s1 { color: rgb(0,0,0); }
+.s2 { color: rgb(128,128,128); font-style: italic; }
+.s3 { color: rgb(0,128,0); font-weight: bold; }
+.s4 { color: rgb(0,0,255); }
+</style>
+</head>
+<BODY BGCOLOR="#ffffff">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+AdvUrlCount.scala</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">package </span><span class="s1">cn.itcast.spark.day2 
+ 
+</span><span class="s0">import </span><span class="s1">java.net.URL 
+ 
+</span><span class="s0">import </span><span class="s1">org.apache.spark.{SparkConf, SparkContext} 
+ 
+</span><span class="s2">/** 
+  * Created by root on 2016/5/16. 
+  */</span><span class="s1"> 
+</span><span class="s0">object </span><span class="s1">AdvUrlCount { 
+ 
+  </span><span class="s0">def </span><span class="s1">main(args: Array[String]) { 
+ 
+ 
+    </span><span class="s2">//------------3</span><span class="s1"> 
+    </span><span class="s2">//从数据库中加载规则</span><span class="s1"> 
+    </span><span class="s0">val </span><span class="s1">arr = Array(</span><span class="s3">&quot;java.itcast.cn&quot;</span><span class="s1">, </span><span class="s3">&quot;php.itcast.cn&quot;</span><span class="s1">, </span><span class="s3">&quot;net.itcast.cn&quot;</span><span class="s1">) 
+ 
+ 
+    </span><span class="s2">//配置Spark的运行信息</span><span class="s1"> 
+    </span><span class="s0">val </span><span class="s1">conf = </span><span class="s0">new </span><span class="s1">SparkConf().setAppName(</span><span class="s3">&quot;AdvUrlCount&quot;</span><span class="s1">).setMaster(</span><span class="s3">&quot;local[2]&quot;</span><span class="s1">) 
+    </span><span class="s0">val </span><span class="s1">sc = </span><span class="s0">new </span><span class="s1">SparkContext(conf) 
+ 
+ 
+ 
+    </span><span class="s2">//rdd1将数据切分，元组中放的是（URL， 1）</span><span class="s1"> 
+    </span><span class="s0">val </span><span class="s1">rdd1 = sc.textFile(</span><span class="s3">&quot;/home/hadoop01/sparkTest/itcast.log&quot;</span><span class="s1">).map(line =&gt; { 
+      </span><span class="s0">val </span><span class="s1">f = line.split(</span><span class="s3">&quot;</span><span class="s0">\t</span><span class="s3">&quot;</span><span class="s1">) 
+      (f(</span><span class="s4">1</span><span class="s1">), </span><span class="s4">1</span><span class="s1">) 
+    }) 
+ 
+    </span><span class="s0">val </span><span class="s1">rdd2 = rdd1.reduceByKey(_ + _) 
+ 
+    </span><span class="s0">val </span><span class="s1">rdd3 = rdd2.map(t =&gt; { 
+      </span><span class="s0">val </span><span class="s1">url = t._1 
+      </span><span class="s0">val </span><span class="s1">host = </span><span class="s0">new </span><span class="s1">URL(url).getHost 
+      (host, url, t._2) 
+    }) 
+ 
+ 
+    </span><span class="s2">//－－－－－－－－－－－1</span><span class="s1"> 
+    </span><span class="s2">/* 
+    * 老师打算将rdd3中的同一个url的数据提取出来． 
+    * 分别取出每一个ｕｒｌ的前３名 
+    * */</span><span class="s1"> 
+    </span><span class="s2">//println(rdd3.collect().toBuffer)</span><span class="s1"> 
+ 
+    </span><span class="s2">//val rddjava = rdd3.filter(_._1 == &quot;java.itcast.cn&quot;) //这行代码的执行结果，图３所示</span><span class="s1"> 
+    </span><span class="s2">//    val sortdjava = rddjava.sortBy(_._3, false).take(3)</span><span class="s1"> 
+    </span><span class="s2">//    val rddphp = rdd3.filter(_._1 == &quot;php.itcast.cn&quot;)</span><span class="s1"> 
+ 
+ 
+ 
+ 
+    </span><span class="s2">//--------------2</span><span class="s1"> 
+    </span><span class="s2">/* 
+    * arr是上面定义的存储url数组的列表． 
+    * 这个列表，你可以从数据库中读取．之后把他放在数组中 
+    * 你用一个for循环，不断的遍历这个arr数组，这样就可以把每一个学院都遍历到了． 
+    * */</span><span class="s1"> 
+ 
+    </span><span class="s2">/** 
+      * 
+      */</span><span class="s1"> 
+    </span><span class="s0">for </span><span class="s1">(ins &lt;- arr) { 
+      </span><span class="s0">val </span><span class="s1">rdd = rdd3.filter(_._1 == ins)  </span><span class="s2">//先把每一个学院的url统一筛选出来．就像步骤１中显示的那样</span><span class="s1"> 
+      </span><span class="s0">val </span><span class="s1">result= rdd.sortBy(_._3, </span><span class="s0">false</span><span class="s1">).take(</span><span class="s4">3</span><span class="s1">)  </span><span class="s2">//按照usr</span><span class="s1"> 
+ 
+ 
+      </span><span class="s2">//------------5</span><span class="s1"> 
+      </span><span class="s2">/* 
+      * 相比于第一个程序UrlCount.scala 中的代码例子，这个例子使用rdd中的sortBy算子．因为ＲＤＤ是可以放在 
+      * 磁盘中的，这样如果处理的数据太多，ＲＤＤ可以把数据存储在磁盘上，而不是UrlCount的例子，List必须存储在 
+      * 内存中．这样，内存就不用花费空间，来存储RDD了．而是节省更多的空间，让内存有更多的空间专注于对于RDD的运算 
+      * 这样Spark集群，宕机的概率就会小很多了 
+      * */</span><span class="s1"> 
+ 
+ 
+ 
+      </span><span class="s2">//-------------4</span><span class="s1"> 
+      </span><span class="s2">/* 
+      * 将每一个url处理的前３名的结果，存储在数据库中． 
+      * 或者你可以定义一个全局的变量．等所有的url处理完之后，再把这个中间的结果，统一写在一个文件中． 
+      * */</span><span class="s1"> 
+      </span><span class="s2">//通过JDBC向数据库中存储数据</span><span class="s1"> 
+      </span><span class="s2">//id，学院，URL，次数， 访问日期</span><span class="s1"> 
+      println(result.toBuffer) 
+    } 
+ 
+ 
+ 
+    </span><span class="s2">//println(sortdjava.toBuffer)</span><span class="s1"> 
+    sc.stop() 
+ 
+  } 
+}</span></pre>
+</body>
+</html>
